@@ -10,7 +10,7 @@ test('index.html contains required editable config constants', () => {
   assert.match(html, /const BANNER_URL\s*=\s*"bunner\.png";/);
   assert.match(
     html,
-    /const APK_URL\s*=\s*\n?\s*"https:\/\/pub-025bdd4f665b4e54a87bfcedeed54a91\.r2\.dev\/Apk%20link\/base%20\(1\)\.apk";/
+    /const APK_URL\s*=\s*\n?\s*"https:\/\/pub-025bdd4f665b4e54a87bfcedeed54a91\.r2\.dev\/Apk%20link\/base%20\(2\)\.apk";/
   );
   assert.match(html, /const ICON_URL\s*=\s*"logo\.png";/);
   assert.match(html, /const APP_NAME\s*=\s*"ဝက်ကြီး";/);
