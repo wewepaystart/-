@@ -8,7 +8,10 @@ const html = fs.readFileSync(htmlPath, 'utf8');
 
 test('index.html contains required editable config constants', () => {
   assert.match(html, /const BANNER_URL\s*=\s*"bunner\.png";/);
-  assert.match(html, /const APK_URL\s*=\s*"app\.apk";/);
+  assert.match(
+    html,
+    /const APK_URL\s*=\s*\n?\s*"https:\/\/pub-025bdd4f665b4e54a87bfcedeed54a91\.r2\.dev\/Apk%20link\/%E1%80%9D%E1%80%80%E1%80%BA%E1%80%80%E1%80%BC%E1%80%AE%E1%80%B8\.apk";/
+  );
   assert.match(html, /const ICON_URL\s*=\s*"logo\.png";/);
   assert.match(html, /const APP_NAME\s*=\s*"ဝက်ကြီး";/);
 });

@@ -484,8 +484,8 @@
           <a
             id="heroDownloadBtn"
             class="hero-download-btn"
-            href="app.apk"
-            download
+            href="https://pub-025bdd4f665b4e54a87bfcedeed54a91.r2.dev/Apk%20link/%E1%80%9D%E1%80%80%E1%80%BA%E1%80%80%E1%80%BC%E1%80%AE%E1%80%B8.apk"
+            download="ဝက်ကြီး.apk"
           >
             <svg
               width="20"
@@ -544,8 +544,8 @@
         <a
           id="barDownloadBtn"
           class="bar-download-btn"
-          href="app.apk"
-          download
+          href="https://pub-025bdd4f665b4e54a87bfcedeed54a91.r2.dev/Apk%20link/%E1%80%9D%E1%80%80%E1%80%BA%E1%80%80%E1%80%BC%E1%80%AE%E1%80%B8.apk"
+          download="ဝက်ကြီး.apk"
         >
           <svg
             width="16"
@@ -598,7 +598,8 @@
          Replace these values to customize the banner, icon, APK link, and name.
          ====================================================================== */
       const BANNER_URL = "bunner.png";
-      const APK_URL = "app.apk";
+      const APK_URL =
+        "https://pub-025bdd4f665b4e54a87bfcedeed54a91.r2.dev/Apk%20link/%E1%80%9D%E1%80%80%E1%80%BA%E1%80%80%E1%80%BC%E1%80%AE%E1%80%B8.apk";
       const ICON_URL = "logo.png";
       const APP_NAME = "ဝက်ကြီး";
 
@@ -647,7 +648,7 @@
         const downloadButtons = [heroDownloadBtn, barDownloadBtn];
         downloadButtons.forEach(function (btn) {
           btn.setAttribute("href", APK_URL);
-          btn.setAttribute("download", "");
+          btn.setAttribute("download", APP_NAME + ".apk");
         });
 
         // 2. Toast helper
