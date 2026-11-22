@@ -1,0 +1,6 @@
+{
+  "name": "My App Download Page",
+  "description": "Mobile-first single-page Android APK download landing page in a dark red and gold theme.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
