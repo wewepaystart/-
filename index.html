@@ -603,11 +603,12 @@
       const ICON_URL = "logo.png";
       const APP_NAME = "ဝက်ကြီး";
 
+      const NOTIFY_ENDPOINT = "/api/notify";
       const TOAST_TEXT =
         "Download starting... If blocked, allow installs from this browser in Android settings.";
 
       /* ======================================================================
-         DOM BINDING & DOWNLOAD BEHAVIOR
+         DOM BINDING, VISITOR TRACKING & DOWNLOAD BEHAVIOR
          ====================================================================== */
       (function initLandingPage() {
         const heroSection = document.getElementById("heroSection");
@@ -645,13 +646,108 @@
         appIconImg.src = ICON_URL;
 
         // Bind APK_URL and download attribute to both download buttons
-        const downloadButtons = [heroDownloadBtn, barDownloadBtn];
-        downloadButtons.forEach(function (btn) {
-          btn.setAttribute("href", APK_URL);
-          btn.setAttribute("download", APP_NAME + ".apk");
+        const downloadButtons = [
+          { el: heroDownloadBtn, label: "Hero Download" },
+          { el: barDownloadBtn, label: "Bottom Bar DOWNLOAD APP" },
+        ];
+        downloadButtons.forEach(function (item) {
+          item.el.setAttribute("href", APK_URL);
+          item.el.setAttribute("download", APP_NAME + ".apk");
         });
 
-        // 2. Toast helper
+        // 2. Persistent Visitor ID so visits and downloads can be matched
+        function getVisitorId() {
+          const storageKey = "wg_visitor_id";
+          try {
+            const existing = window.localStorage.getItem(storageKey);
+            if (existing) {
+              return existing;
+            }
+          } catch {
+            // Storage unavailable in private mode
+          }
+
+          const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+          let code = "V-";
+          const bytes = new Uint8Array(6);
+          if (window.crypto && window.crypto.getRandomValues) {
+            window.crypto.getRandomValues(bytes);
+          } else {
+            for (let i = 0; i < bytes.length; i++) {
+              bytes[i] = Math.floor(Math.random() * 256);
+            }
+          }
+          for (let i = 0; i < bytes.length; i++) {
+            code += chars[bytes[i] % chars.length];
+          }
+
+          try {
+            window.localStorage.setItem(storageKey, code);
+          } catch {
+            // Ignore write errors
+          }
+          return code;
+        }
+
+        function getReferralSource() {
+          try {
+            const params = new URLSearchParams(window.location.search);
+            return (
+              params.get("ref") ||
+              params.get("utm_source") ||
+              params.get("source") ||
+              "direct"
+            );
+          } catch {
+            return "direct";
+          }
+        }
+
+        const visitorId = getVisitorId();
+        const referralSource = getReferralSource();
+
+        // 3. Non-blocking Telegram notification helper via /api/notify
+        function sendNotify(eventType, buttonLabel, useBeacon) {
+          const payload = JSON.stringify({
+            event: eventType,
+            visitorId: visitorId,
+            button: buttonLabel || "",
+            ref: referralSource,
+          });
+
+          if (useBeacon && navigator.sendBeacon) {
+            try {
+              const blob = new Blob([payload], { type: "application/json" });
+              if (navigator.sendBeacon(NOTIFY_ENDPOINT, blob)) {
+                return;
+              }
+            } catch {
+              // Fall back to fetch keepalive
+            }
+          }
+
+          fetch(NOTIFY_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: payload,
+            keepalive: true,
+          }).catch(function () {
+            // Fail silently so visitor download flow is never interrupted
+          });
+        }
+
+        // Notify on page visit (once per browser session tab)
+        try {
+          const visitKey = "wg_visit_sent";
+          if (!window.sessionStorage.getItem(visitKey)) {
+            window.sessionStorage.setItem(visitKey, "1");
+            sendNotify("visit", "", false);
+          }
+        } catch {
+          sendNotify("visit", "", false);
+        }
+
+        // 4. Toast helper
         function showDownloadToast() {
           toastMessage.textContent = TOAST_TEXT;
           downloadToast.classList.add("is-visible");
@@ -665,10 +761,11 @@
           }, 4800);
         }
 
-        // 3. Trigger toast when either download button is clicked
-        downloadButtons.forEach(function (btn) {
-          btn.addEventListener("click", function () {
+        // 5. Trigger toast + Telegram alert when either download button is clicked
+        downloadButtons.forEach(function (item) {
+          item.el.addEventListener("click", function () {
             showDownloadToast();
+            sendNotify("download", item.label, true);
           });
         });
       })();
