@@ -432,11 +432,119 @@
       }
 
       /* ======================================================================
-         7. REDUCED MOTION COMPLIANCE
+         7. IN-APP BROWSER GUIDANCE BANNER (FB / TIKTOK / INSTAGRAM / ETC.)
+         ====================================================================== */
+      .inapp-banner {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 70;
+        background: linear-gradient(135deg, #0a1529 0%, #2a070f 100%);
+        border-bottom: 1px solid rgba(250, 204, 21, 0.42);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
+      }
+
+      .inapp-banner.is-visible {
+        display: block;
+      }
+
+      body.has-inapp-banner {
+        padding-top: 76px;
+      }
+
+      .inapp-banner-inner {
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .inapp-text {
+        font-size: 0.78125rem;
+        font-weight: 600;
+        line-height: 1.45;
+        color: #f8fafc;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .inapp-text strong {
+        color: #fde047;
+        font-weight: 800;
+      }
+
+      .inapp-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+
+      .inapp-copy-btn {
+        min-height: 40px;
+        padding: 0 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(250, 204, 21, 0.55);
+        background: rgba(250, 204, 21, 0.14);
+        color: #fde68a;
+        font-family: var(--font-sans);
+        font-size: 0.75rem;
+        font-weight: 700;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .inapp-copy-btn:active {
+        transform: scale(0.96);
+      }
+
+      .inapp-close-btn {
+        min-width: 40px;
+        min-height: 40px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.06);
+        color: #e2e8f0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .inapp-arrow {
+        color: #facc15;
+        flex-shrink: 0;
+        animation: arrowBounce 1.4s ease-in-out infinite;
+      }
+
+      @keyframes arrowBounce {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
+        50% {
+          transform: translate(3px, -3px);
+        }
+      }
+
+      .inapp-copy-btn:focus-visible,
+      .inapp-close-btn:focus-visible {
+        outline: 2px solid #fef08a;
+        outline-offset: 2px;
+      }
+
+      /* ======================================================================
+         8. REDUCED MOTION COMPLIANCE
          ====================================================================== */
       @media (prefers-reduced-motion: reduce) {
         .hero-download-btn,
-        .hero-download-btn::after {
+        .hero-download-btn::after,
+        .inapp-arrow {
           animation: none;
         }
         .hero-download-btn,
@@ -448,6 +556,62 @@
     </style>
   </head>
   <body>
+    <!-- In-App Browser Guidance Banner (Only visible inside FB/TikTok/IG/etc.) -->
+    <div
+      id="inAppBanner"
+      class="inapp-banner"
+      role="region"
+      aria-label="Browser opening instructions"
+    >
+      <div class="inapp-banner-inner">
+        <p class="inapp-text">
+          ညာဘက်အပေါ်ထောင့် <strong>⋯</strong> ကိုနှိပ်ပြီး
+          <strong>Open in Browser (Chrome)</strong> ဖြင့် ဖွင့်ပါ
+        </p>
+        <div class="inapp-actions">
+          <button type="button" id="inAppCopyBtn" class="inapp-copy-btn">
+            Copy Link
+          </button>
+          <button
+            type="button"
+            id="inAppCloseBtn"
+            class="inapp-close-btn"
+            aria-label="ပိတ်ရန်"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          <svg
+            class="inapp-arrow"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <line x1="7" y1="17" x2="17" y2="7"></line>
+            <polyline points="7 7 17 7 17 17"></polyline>
+          </svg>
+        </div>
+      </div>
+    </div>
+
     <main class="page-container">
       <!-- 1. Full-Width Hero Banner Section -->
       <section class="hero-section" id="heroSection">
@@ -761,9 +925,9 @@
           });
         })();
 
-        // 4. Toast helper
-        function showDownloadToast() {
-          toastMessage.textContent = TOAST_TEXT;
+        // 4. Toast helper (supports custom message)
+        function showDownloadToast(customMessage) {
+          toastMessage.textContent = customMessage || TOAST_TEXT;
           downloadToast.classList.add("is-visible");
 
           if (toastTimer) {
@@ -782,6 +946,62 @@
             sendNotify("download", item.label, true);
           });
         });
+
+        // 6. In-App Browser Guidance Banner (Hidden in regular Chrome/Safari)
+        (function setupInAppBanner() {
+          const inAppBanner = document.getElementById("inAppBanner");
+          const inAppCopyBtn = document.getElementById("inAppCopyBtn");
+          const inAppCloseBtn = document.getElementById("inAppCloseBtn");
+
+          const ua = navigator.userAgent || "";
+          const isInApp =
+            /(FBAN|FBAV|FB_IAB|FB4A|Messenger|BytedanceWebview|TikTok|musical_ly|Instagram|Line\/|MicroMessenger|Viber)/i.test(
+              ua
+            );
+
+          let forcePreview = false;
+          try {
+            forcePreview =
+              new URLSearchParams(window.location.search).get("inapp") === "1";
+          } catch {
+            forcePreview = false;
+          }
+
+          if (!isInApp && !forcePreview) {
+            return;
+          }
+
+          inAppBanner.classList.add("is-visible");
+          document.body.classList.add("has-inapp-banner");
+
+          inAppCloseBtn.addEventListener("click", function () {
+            inAppBanner.classList.remove("is-visible");
+            document.body.classList.remove("has-inapp-banner");
+          });
+
+          inAppCopyBtn.addEventListener("click", function () {
+            const currentUrl = window.location.href;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard
+                .writeText(currentUrl)
+                .then(function () {
+                  inAppCopyBtn.textContent = "Copied!";
+                  showDownloadToast(
+                    "Link ကူးယူပြီးပါပြီ — Chrome Browser တွင် Paste ချဖွင့်ပါ။"
+                  );
+                })
+                .catch(function () {
+                  showDownloadToast(
+                    "ညာဘက်အပေါ်ထောင့် ⋯ မှ Open in Browser ဖြင့် ဖွင့်ပါ။"
+                  );
+                });
+            } else {
+              showDownloadToast(
+                "ညာဘက်အပေါ်ထောင့် ⋯ မှ Open in Browser ဖြင့် ဖွင့်ပါ။"
+              );
+            }
+          });
+        })();
       })();
     </script>
   </body>

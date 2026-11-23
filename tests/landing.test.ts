@@ -41,6 +41,9 @@ test('index.html includes both download buttons, toast text, and Telegram notify
   );
   assert.match(html, /\/api\/notify/);
   assert.match(html, /wg_visitor_id/);
+  assert.match(html, /id="inAppBanner"/);
+  assert.match(html, /Open in Browser \(Chrome\)/);
+  assert.match(html, /FBAN\|FBAV/);
 });
 
 test('index.html uses no external JS/CSS frameworks', () => {
