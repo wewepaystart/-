@@ -125,7 +125,12 @@ test('notify handler rejects non-POST and invalid events', async () => {
 
   const resGet = createRes();
   await handler({ method: 'GET', headers: {} }, resGet);
-  assert.equal(resGet.statusCode, 405);
+  assert.equal(resGet.statusCode, 200);
+  assert.deepEqual(resGet.body, { ok: true, configured: false });
+
+  const resPut = createRes();
+  await handler({ method: 'PUT', headers: {} }, resPut);
+  assert.equal(resPut.statusCode, 405);
 
   const resBadEvent = createRes();
   await handler({ method: 'POST', headers: {}, body: { event: 'hack' } }, resBadEvent);

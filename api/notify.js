@@ -144,6 +144,13 @@ function parseJsonBody(rawBody) {
   if (!rawBody) {
     return {};
   }
+  if (Buffer.isBuffer(rawBody)) {
+    try {
+      return JSON.parse(rawBody.toString("utf8"));
+    } catch {
+      return null;
+    }
+  }
   if (typeof rawBody === "object") {
     return rawBody;
   }
@@ -157,13 +164,38 @@ function parseJsonBody(rawBody) {
   return null;
 }
 
+async function readStreamBody(req) {
+  if (req.body !== undefined) {
+    return req.body;
+  }
+  if (typeof req[Symbol.asyncIterator] !== "function") {
+    return undefined;
+  }
+  const chunks = [];
+  for await (const chunk of req) {
+    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+  }
+  return chunks.length > 0 ? Buffer.concat(chunks).toString("utf8") : undefined;
+}
+
 export default async function handler(req, res) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+
+  if (req.method === "GET") {
+    return res.status(200).json({
+      ok: true,
+      configured: Boolean(token && chatId),
+    });
+  }
+
   if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
+    res.setHeader("Allow", "GET, POST");
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
-  const body = parseJsonBody(req.body);
+  const rawBody = await readStreamBody(req);
+  const body = parseJsonBody(rawBody);
   if (!body || typeof body !== "object") {
     return res.status(400).json({ ok: false, error: "Invalid JSON body" });
   }
@@ -173,8 +205,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false, error: "Invalid event type" });
   }
 
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
   if (!token || !chatId) {
     return res
       .status(503)
@@ -209,9 +239,16 @@ export default async function handler(req, res) {
     );
 
     if (!tgResponse.ok) {
-      return res
-        .status(502)
-        .json({ ok: false, error: "Upstream notification failed" });
+      let reason = `HTTP ${tgResponse.status}`;
+      try {
+        const errJson = await tgResponse.json();
+        if (errJson && typeof errJson.description === "string") {
+          reason = sanitizeField(errJson.description, 120);
+        }
+      } catch {
+        // Ignore JSON parse errors
+      }
+      return res.status(502).json({ ok: false, error: reason });
     }
 
     return res.status(200).json({ ok: true });

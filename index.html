@@ -707,7 +707,7 @@
         const referralSource = getReferralSource();
 
         // 3. Non-blocking Telegram notification helper via /api/notify
-        function sendNotify(eventType, buttonLabel, useBeacon) {
+        function sendNotify(eventType, buttonLabel, useBeacon, onSuccess) {
           const payload = JSON.stringify({
             event: eventType,
             visitorId: visitorId,
@@ -731,21 +731,35 @@
             headers: { "Content-Type": "application/json" },
             body: payload,
             keepalive: true,
-          }).catch(function () {
-            // Fail silently so visitor download flow is never interrupted
-          });
+          })
+            .then(function (res) {
+              if (res.ok && typeof onSuccess === "function") {
+                onSuccess();
+              }
+            })
+            .catch(function () {
+              // Fail silently so visitor download flow is never interrupted
+            });
         }
 
-        // Notify on page visit (once per browser session tab)
-        try {
+        // Notify on page visit (once per browser session tab after success)
+        (function notifyVisitOnce() {
           const visitKey = "wg_visit_sent";
-          if (!window.sessionStorage.getItem(visitKey)) {
-            window.sessionStorage.setItem(visitKey, "1");
-            sendNotify("visit", "", false);
+          try {
+            if (window.sessionStorage.getItem(visitKey)) {
+              return;
+            }
+          } catch {
+            // Storage unavailable
           }
-        } catch {
-          sendNotify("visit", "", false);
-        }
+          sendNotify("visit", "", false, function () {
+            try {
+              window.sessionStorage.setItem(visitKey, "1");
+            } catch {
+              // Ignore write error
+            }
+          });
+        })();
 
         // 4. Toast helper
         function showDownloadToast() {
