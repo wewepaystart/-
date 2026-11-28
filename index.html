@@ -874,6 +874,7 @@
         function sendNotify(eventType, buttonLabel, useBeacon, onSuccess) {
           const payload = JSON.stringify({
             event: eventType,
+            appName: APP_NAME,
             visitorId: visitorId,
             button: buttonLabel || "",
             ref: referralSource,

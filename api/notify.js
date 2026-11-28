@@ -98,6 +98,7 @@ export function extractRequestMeta(headers = {}) {
 
 export function formatTelegramMessage({
   event,
+  appName = "",
   visitorId = "",
   button = "",
   ref = "",
@@ -106,6 +107,7 @@ export function formatTelegramMessage({
   device = "",
   timestamp = "",
 }) {
+  const safeAppName = escapeHtml(sanitizeField(appName, 48) || "ဝက်ကြီး");
   const safeVisitor = escapeHtml(sanitizeField(visitorId, 32) || "Unknown");
   const safeButton = escapeHtml(sanitizeField(button, 48) || "Download Button");
   const safeRef = escapeHtml(sanitizeField(ref, 48) || "direct");
@@ -119,6 +121,7 @@ export function formatTelegramMessage({
   if (event === "download") {
     return [
       "⬇️ <b>APK Download နှိပ်သွားပါပြီ</b>",
+      `📲 <b>App:</b> ${safeAppName}`,
       `🆔 <b>Visitor ID:</b> <code>#${safeVisitor}</code>`,
       `🔘 <b>Button:</b> ${safeButton}`,
       `📍 <b>Location:</b> ${safeLocation}`,
@@ -131,6 +134,7 @@ export function formatTelegramMessage({
 
   return [
     "👀 <b>Website ဝင်ရောက်ကြည့်ရှုမှု</b>",
+    `📲 <b>App:</b> ${safeAppName}`,
     `🆔 <b>Visitor ID:</b> <code>#${safeVisitor}</code>`,
     `📍 <b>Location:</b> ${safeLocation}`,
     `📱 <b>Device:</b> ${safeDevice}`,
@@ -214,6 +218,7 @@ export default async function handler(req, res) {
   const meta = extractRequestMeta(req.headers);
   const text = formatTelegramMessage({
     event,
+    appName: body.appName,
     visitorId: body.visitorId,
     button: body.button,
     ref: body.ref,

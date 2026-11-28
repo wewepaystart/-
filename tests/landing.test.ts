@@ -75,9 +75,10 @@ test('notify helper parses user agent and Vercel geo headers safely', () => {
   assert.equal(meta.device, 'Android 13 · Chrome');
 });
 
-test('formatTelegramMessage escapes HTML injection and formats visit vs download', () => {
+test('formatTelegramMessage escapes HTML injection and formats visit vs download with appName', () => {
   const visitMsg = formatTelegramMessage({
     event: 'visit',
+    appName: 'ဝက်ကြီး',
     visitorId: 'V-123456',
     ref: '<script>alert(1)</script>',
     ip: '103.1.2.3',
@@ -86,12 +87,14 @@ test('formatTelegramMessage escapes HTML injection and formats visit vs download
     timestamp: '2026-11-22T10:00:00.000Z',
   });
   assert.match(visitMsg, /Website ဝင်ရောက်ကြည့်ရှုမှု/);
+  assert.match(visitMsg, /App:<\/b> ဝက်ကြီး/);
   assert.match(visitMsg, /#V-123456/);
   assert.doesNotMatch(visitMsg, /<script>/);
   assert.match(visitMsg, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
 
   const dlMsg = formatTelegramMessage({
     event: 'download',
+    appName: 'ဝက်ကြီး',
     visitorId: 'V-123456',
     button: 'Hero Download',
     ref: 'tg',
@@ -101,6 +104,7 @@ test('formatTelegramMessage escapes HTML injection and formats visit vs download
     timestamp: '2026-11-22T10:00:05.000Z',
   });
   assert.match(dlMsg, /APK Download နှိပ်သွားပါပြီ/);
+  assert.match(dlMsg, /App:<\/b> ဝက်ကြီး/);
   assert.match(dlMsg, /Hero Download/);
   assert.equal(escapeHtml('a & b < c'), 'a &amp; b &lt; c');
 });
